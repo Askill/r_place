@@ -8,7 +8,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -22,20 +21,6 @@ var addr = flag.String("addr", "localhost:8080", "http service address")
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  2048,
 	WriteBufferSize: 2048,
-}
-
-type Pixel struct {
-	X         uint16 `json:"x"`
-	Y         uint16 `json:"y"`
-	Color     uint8  `json:"color"`
-	Timestamp int64  `json:"timestamp"`
-	UserID    uint64 `json:"userid"`
-}
-
-func JsonToStruct(input []byte) Pixel {
-	pixel := Pixel{}
-	json.Unmarshal(input, &pixel)
-	return pixel
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
