@@ -90,7 +90,7 @@ func comparePixels(pixel1 *pixel, pixel2 *pixel) bool {
 func (img *image) GetDiff(img2 *image) messageImage {
 	diff := GetMessageImage(img.width, img.height)
 	for i := 0; i < int(img.width*img.height); i++ {
-		if comparePixels(&img.pixels[i], &img2.pixels[i]) {
+		if !comparePixels(&img.pixels[i], &img2.pixels[i]) {
 			diff.Pixels[i].Color = img2.pixels[i].Color
 			diff.Pixels[i].UserID = img2.pixels[i].UserID
 			diff.Pixels[i].Timestamp = img2.pixels[i].Timestamp
