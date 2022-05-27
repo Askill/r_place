@@ -36,7 +36,7 @@ func set(w http.ResponseWriter, r *http.Request) {
 
 		err = c.WriteMessage(mt, msg)
 		if err != nil {
-			//log.Println("write:", err)
+			log.Println("write:", err)
 			break
 		}
 	}
@@ -58,7 +58,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 			msg, err := json.Marshal(diff)
 			err = c.WriteMessage(1, msg)
 			if err != nil {
-				log.Print("error while writing image", err)
+				log.Println("error while writing image", err)
 			}
 			copy(tmpImage.pixels, img.pixels)
 		}
