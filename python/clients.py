@@ -21,11 +21,11 @@ class pixel:
 
 async def main():
     message = pixel(
-        x=0,
-        y=1,
-        color=0,
+        x=11,
+        y=0,
+        color=15,
         timestamp=int(time.time()),
-        userid=0,
+        userid=1,
     )
     async with websockets.connect("ws://localhost:8080") as websocket:
         print(message)

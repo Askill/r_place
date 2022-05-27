@@ -11,17 +11,15 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
-
-var addr = flag.String("addr", "localhost:8080", "http service address")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  2048,
 	WriteBufferSize: 2048,
 }
+var img = GetImage(10, 10)
 
 func serve(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
@@ -31,16 +29,17 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 	for {
-		mt, message, err := c.ReadMessage()
+		mt, msg, err := c.ReadMessage()
 		if err != nil {
-			//log.Println("read:", err)
+			log.Println("read:", err)
 			break
 		}
-		pixel := JsonToStruct(message)
 
-		tm := time.Unix(pixel.Timestamp, 0)
-		log.Println(tm)
-		err = c.WriteMessage(mt, message)
+		message := Message{}
+		message.JsonToStruct(msg)
+		img.SetPixel(message)
+
+		err = c.WriteMessage(mt, msg)
 		if err != nil {
 			//log.Println("write:", err)
 			break
@@ -49,6 +48,8 @@ func serve(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var addr = flag.String("addr", "localhost:8080", "http service address")
+
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/", serve)
