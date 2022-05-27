@@ -27,7 +27,7 @@ async def main():
         timestamp=int(time.time()),
         userid=1,
     )
-    async with websockets.connect("ws://localhost:8080") as websocket:
+    async with websockets.connect("ws://localhost:8080/set") as websocket:
         print(message)
         await websocket.send(json.dumps(message.__dict__))
         await websocket.recv()

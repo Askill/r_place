@@ -32,6 +32,25 @@ type image struct {
 	pixels []pixel
 }
 
+type messagePixel struct {
+	Color     uint8  `json:"color"`
+	Timestamp int64  `json:"timestamp"`
+	UserID    uint64 `json:"userid"`
+}
+type messageImage struct {
+	Width  uint16         `json:"width"`
+	Height uint16         `json:"height"`
+	Pixels []messagePixel `json:"pixel"`
+}
+
+func GetMessageImage(w uint16, h uint16) messageImage {
+	pixels := make([]messagePixel, w*h)
+	for i := 0; i < int(w*h); i++ {
+		pixels[i] = messagePixel{Color: 0, Timestamp: 0, UserID: 0}
+	}
+	return messageImage{Width: w, Height: h, Pixels: pixels}
+}
+
 func GetImage(w uint16, h uint16) image {
 	pixels := make([]pixel, w*h)
 	for i := 0; i < int(w*h); i++ {
@@ -62,4 +81,20 @@ func (img *image) SetPixel(message Message) *image {
 	pos := uint32(message.X)*uint32(img.width) + uint32(message.Y)
 	img.pixels[pos].setColor(message.Color, message.Timestamp, message.UserID)
 	return img
+}
+
+func comparePixels(pixel1 *pixel, pixel2 *pixel) bool {
+	return pixel1.Color == pixel2.Color && pixel1.Timestamp == pixel2.Timestamp && pixel1.UserID == pixel2.UserID
+}
+
+func (img *image) GetDiff(img2 *image) messageImage {
+	diff := GetMessageImage(img.width, img.height)
+	for i := 0; i < int(img.width*img.height); i++ {
+		if comparePixels(&img.pixels[i], &img2.pixels[i]) {
+			diff.Pixels[i].Color = img2.pixels[i].Color
+			diff.Pixels[i].UserID = img2.pixels[i].UserID
+			diff.Pixels[i].Timestamp = img2.pixels[i].Timestamp
+		}
+	}
+	return diff
 }
