@@ -21,19 +21,17 @@ class pixel:
 
 
 async def main():
-
     async with websockets.connect("ws://localhost:8080/") as websocket:
-        for i in range(10):
+        for _ in range(10):
             message = pixel(
-                x=random.randint(0, 10),
-                y=random.randint(0, 10),
+                x=random.randint(0, 9),
+                y=random.randint(0, 9),
                 color=random.randint(0,15),
                 timestamp=int(time.time()),
                 userid=1,
             )
             print(message)
             await websocket.send(json.dumps(message.__dict__))
-        print(await websocket.recv())
         while True:
             x = await websocket.recv()
             print(x)
