@@ -5,7 +5,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -15,19 +14,29 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  2048,
 	WriteBufferSize: 2048,
 }
-var img = GetImage(10, 10)
+var img = GetImage(1000, 1000)
 
-func write(ticker time.Ticker, c *websocket.Conn, wg *sync.WaitGroup) {
-	defer wg.Done()
+func get(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("error while upgrading", err)
+		return
+	}
+	defer c.Close()
+	ticker := time.NewTicker(1 * time.Second)
+
+	var refImage = GetImage(img.width, img.height)
 	var tmpImage = GetImage(img.width, img.height)
+
 	for range ticker.C {
-		diff := tmpImage.GetDiff(&img)
-		for i := 0; i < int(diff.Width*diff.Height); i++ {
-			pix := diff.Pixels[i]
-			if pix.UserID != 0 {
-				x := uint16(i / int(diff.Width))
-				y := uint16(i % int(diff.Height))
-				msg := Message{X: x, Y: y, Timestamp: pix.Timestamp, UserID: pix.UserID, Color: pix.Color}
+		copy(refImage.pixels, img.pixels)
+		diff := tmpImage.GetDiff(&refImage)
+		for i := 0; i < int(diff.width*diff.height); i++ {
+			pix := diff.pixels[i]
+			if pix.pixel.UserID != 0 {
+				x := i / int(diff.width)
+				y := i % int(diff.height)
+				msg := Message{X: uint32(x), Y: uint32(y), Timestamp: pix.pixel.Timestamp, UserID: pix.pixel.UserID, Color: pix.pixel.Color}
 				marshalMsg, err := json.Marshal(msg)
 				if err != nil {
 					log.Println("error while writing image", err)
@@ -36,12 +45,17 @@ func write(ticker time.Ticker, c *websocket.Conn, wg *sync.WaitGroup) {
 				err = c.WriteMessage(1, marshalMsg)
 			}
 		}
-		copy(img.pixels, tmpImage.pixels)
+		copy(tmpImage.pixels, refImage.pixels)
 	}
 }
 
-func read(c *websocket.Conn, wg *sync.WaitGroup) {
-	defer wg.Done()
+func set(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("error while upgrading", err)
+		return
+	}
+	defer c.Close()
 	for {
 		_, msg, err := c.ReadMessage()
 		if err != nil {
@@ -50,26 +64,10 @@ func read(c *websocket.Conn, wg *sync.WaitGroup) {
 		}
 
 		message := Message{}
-		message.JsonToStruct(msg)
+		json.Unmarshal(msg, &message)
+
 		img.SetPixel(message)
 	}
-}
-
-func serve(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Print("error while upgrading", err)
-		return
-	}
-	defer c.Close()
-	ticker := time.NewTicker(1 * time.Second)
-	var wg sync.WaitGroup
-
-	// end fucntion if either of the 2 functions is done
-	wg.Add(1)
-	go write(*ticker, c, &wg)
-	go read(c, &wg)
-	wg.Wait()
 }
 
 func main() {
@@ -78,7 +76,8 @@ func main() {
 	flag.Parse()
 	log.SetFlags(0)
 	log.Println("starting server on", *addr)
-	http.HandleFunc("/", serve)
+	http.HandleFunc("/get", get)
+	http.HandleFunc("/set", set)
 
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }

@@ -1,71 +1,50 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 )
 
 type Message struct {
-	X         uint16 `json:"x"`
-	Y         uint16 `json:"y"`
+	X         uint32 `json:"x"`
+	Y         uint32 `json:"y"`
 	Color     uint8  `json:"color"`
 	Timestamp int64  `json:"timestamp"`
 	UserID    uint64 `json:"userid"`
-}
-
-func (message *Message) JsonToStruct(input []byte) *Message {
-	json.Unmarshal(input, message)
-	return message
 }
 
 type pixel struct {
 	Color     uint8  `json:"color"`
 	Timestamp int64  `json:"timestamp"`
 	UserID    uint64 `json:"userid"`
-	Mutex     sync.Mutex
+}
+
+type pixelContainer struct {
+	pixel pixel
+	Mutex sync.Mutex
 }
 
 type image struct {
-	width  uint16
-	height uint16
-	pixels []pixel
+	width  uint32
+	height uint32
+	pixels []pixelContainer
 }
 
-type messagePixel struct {
-	Color     uint8  `json:"color"`
-	Timestamp int64  `json:"timestamp"`
-	UserID    uint64 `json:"userid"`
-}
-type messageImage struct {
-	Width  uint16         `json:"width"`
-	Height uint16         `json:"height"`
-	Pixels []messagePixel `json:"pixel"`
-}
-
-func GetMessageImage(w uint16, h uint16) messageImage {
-	pixels := make([]messagePixel, w*h)
+func GetImage(w uint32, h uint32) image {
+	pixels := make([]pixelContainer, w*h)
 	for i := 0; i < int(w*h); i++ {
-		pixels[i] = messagePixel{Color: 0, Timestamp: 0, UserID: 0}
-	}
-	return messageImage{Width: w, Height: h, Pixels: pixels}
-}
-
-func GetImage(w uint16, h uint16) image {
-	pixels := make([]pixel, w*h)
-	for i := 0; i < int(w*h); i++ {
-		pixels[i] = pixel{Color: 0, Timestamp: 0, UserID: 0, Mutex: sync.Mutex{}}
+		pixels[i] = pixelContainer{pixel: pixel{Color: 0, Timestamp: 0, UserID: 0}, Mutex: sync.Mutex{}}
 	}
 	return image{width: w, height: h, pixels: pixels}
 }
 
-func (p *pixel) setColor(color uint8, timestamp int64, userid uint64) {
+func (p *pixelContainer) setColor(color uint8, timestamp int64, userid uint64) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
-	if timestamp > p.Timestamp {
-		p.Color = color
-		p.Timestamp = timestamp
-		p.UserID = userid
+	if timestamp > p.pixel.Timestamp {
+		p.pixel.Color = color
+		p.pixel.Timestamp = timestamp
+		p.pixel.UserID = userid
 	}
 }
 
@@ -83,17 +62,19 @@ func (img *image) SetPixel(message Message) *image {
 	return img
 }
 
-func comparePixels(pixel1 *pixel, pixel2 *pixel) bool {
-	return pixel1.Color == pixel2.Color && pixel1.Timestamp == pixel2.Timestamp && pixel1.UserID == pixel2.UserID
+func comparePixels(pixel1 *pixelContainer, pixel2 *pixelContainer) bool {
+	return pixel1.pixel.Color == pixel2.pixel.Color &&
+		pixel1.pixel.Timestamp == pixel2.pixel.Timestamp &&
+		pixel1.pixel.UserID == pixel2.pixel.UserID
 }
 
-func (img *image) GetDiff(img2 *image) messageImage {
-	diff := GetMessageImage(img.width, img.height)
+func (img *image) GetDiff(img2 *image) image {
+	diff := GetImage(img.width, img.height)
 	for i := 0; i < int(img.width*img.height); i++ {
 		if !comparePixels(&img.pixels[i], &img2.pixels[i]) {
-			diff.Pixels[i].Color = img2.pixels[i].Color
-			diff.Pixels[i].UserID = img2.pixels[i].UserID
-			diff.Pixels[i].Timestamp = img2.pixels[i].Timestamp
+			diff.pixels[i].pixel.Color = img2.pixels[i].pixel.Color
+			diff.pixels[i].pixel.UserID = img2.pixels[i].pixel.UserID
+			diff.pixels[i].pixel.Timestamp = img2.pixels[i].pixel.Timestamp
 		}
 	}
 	return diff

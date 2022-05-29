@@ -20,30 +20,32 @@ class pixel:
     userid: int
 
 async def sender():
-    async with websockets.connect("ws://localhost:8080/") as websocket:
+    async with websockets.connect("ws://localhost:8080/set") as websocket:
         while True:
             message = pixel(
-                x=random.randint(0, 9),
-                y=random.randint(0, 9),
+                x=random.randint(0, 990),
+                y=random.randint(0, 990),
                 color=random.randint(0,15),
                 timestamp=int(time.time()),
                 userid=1,
             )
             await websocket.send(json.dumps(message.__dict__))
+            
             await asyncio.sleep(0.1)
 
 async def client():
-    async with websockets.connect("ws://localhost:8080/") as websocket:
+    async with websockets.connect("ws://localhost:8080/get") as websocket:
         i= 0
         while True:
             i+=1
             x = await websocket.recv()
-            print(i, pixel(**json.loads(x)))
+            #print(i, x)
 
 async def main():
-    coros = [sender() for _ in range(100)]
+    coros = [sender() for _ in range(500)]
     coros.append(client())
     returns = await asyncio.gather(*coros)
+    
 
 if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(main())
