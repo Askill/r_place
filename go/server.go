@@ -14,7 +14,7 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  2048,
 	WriteBufferSize: 2048,
 }
-var img = GetImage(1000, 1000)
+var img = GetImage(100, 100)
 
 func get(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
