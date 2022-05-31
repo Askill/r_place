@@ -48,18 +48,18 @@ func (p *pixelContainer) setColor(color uint8, timestamp int64, userid uint64) {
 	}
 }
 
-func (img *image) SetPixel(message Message) *image {
+func (img *image) SetPixel(message Message) int {
 	if message.X >= img.width || message.Y >= img.height || message.X < 0 || message.Y < 0 {
 		fmt.Printf("User %d tried accessing out of bounds \n", message.UserID)
-		return img
+		return 1
 	}
 	if message.Color >= 16 || message.Color < 0 {
 		fmt.Printf("User %d tried setting non existent color \n", message.UserID)
-		return img
+		return 1
 	}
 	pos := uint32(message.X)*uint32(img.width) + uint32(message.Y)
 	img.pixels[pos].setColor(message.Color, message.Timestamp, message.UserID)
-	return img
+	return 0
 }
 
 func comparePixels(pixel1 *pixelContainer, pixel2 *pixelContainer) bool {

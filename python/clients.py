@@ -26,18 +26,21 @@ async def sender():
     async with websockets.connect("ws://localhost:8080/set") as websocket:
         while True:
             message = pixel(
-                x=random.randint(0, 99),
-                y=random.randint(0, 99),
-                color=random.randint(0,11),
+                x=random.randint(0, 999),
+                y=random.randint(0, 999),
+                color=random.randint(0,15),
                 timestamp=int(time.time()),
                 userid=1,
             )
             await websocket.send(json.dumps(message.__dict__))
+            succ = await websocket.recv()
+            if succ == "1":
+                print(message, "was not set")
             
             await asyncio.sleep(0.1)
 
 async def client():
-    image = np.zeros(shape=[100, 100, 3], dtype=np.uint8)
+    image = np.zeros(shape=[1000, 1000, 3], dtype=np.uint8)
     colors = []
     for name, hex in matplotlib.colors.cnames.items():
         colors.append(matplotlib.colors.to_rgb(hex))
@@ -48,10 +51,11 @@ async def client():
             i+=1
             x = pixel(**json.loads(await websocket.recv()))
             image[x.x][x.y] = ([y*255 for y in colors[x.color]])
-            if i% 1000 == 0:
+            if i% 500 == 0:
                 cv2.imshow("changes x", image)
                 cv2.waitKey(10) & 0XFF
-            print(i, x)
+            await websocket.send("1")
+            #print(i, x)
 
 async def main():
     coros = [sender() for _ in range(100)]
