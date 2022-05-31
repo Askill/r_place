@@ -51,14 +51,14 @@ async def client():
             i+=1
             x = pixel(**json.loads(await websocket.recv()))
             image[x.x][x.y] = ([y*255 for y in colors[x.color]])
-            if i% 500 == 0:
-                cv2.imshow("changes x", image)
-                cv2.waitKey(10) & 0XFF
+            #if i% 4000 == 0:
+            #    cv2.imshow("changes x", image)
+            #    cv2.waitKey(10) & 0XFF
             await websocket.send("1")
             #print(i, x)
 
 async def main():
-    coros = [sender() for _ in range(100)]
+    coros = [sender() for _ in range(500)]
     coros.append(client())
     returns = await asyncio.gather(*coros)
     

@@ -12,8 +12,8 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  2048,
-	WriteBufferSize: 2048,
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
 }
 
 const (
