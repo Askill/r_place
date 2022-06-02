@@ -20,36 +20,36 @@ type pixel struct {
 }
 
 type pixelContainer struct {
-	pixel pixel
+	Pixel pixel `json:"pixel"`
 	Mutex sync.Mutex
 }
 
 type image struct {
-	width  uint32
-	height uint32
-	pixels []pixelContainer
+	Width  uint32           `json:"Width"`
+	Height uint32           `json:"Height"`
+	Pixels []pixelContainer `json:"Pixels"`
 }
 
 func GetImage(w uint32, h uint32) image {
-	pixels := make([]pixelContainer, w*h)
+	Pixels := make([]pixelContainer, w*h)
 	for i := 0; i < int(w*h); i++ {
-		pixels[i] = pixelContainer{pixel: pixel{Color: 0, Timestamp: 0, UserID: 0}, Mutex: sync.Mutex{}}
+		Pixels[i] = pixelContainer{Pixel: pixel{Color: 0, Timestamp: 0, UserID: 0}, Mutex: sync.Mutex{}}
 	}
-	return image{width: w, height: h, pixels: pixels}
+	return image{Width: w, Height: h, Pixels: Pixels}
 }
 
 func (p *pixelContainer) setColor(color uint8, timestamp int64, userid uint64) {
 	p.Mutex.Lock()
 	defer p.Mutex.Unlock()
-	if timestamp > p.pixel.Timestamp {
-		p.pixel.Color = color
-		p.pixel.Timestamp = timestamp
-		p.pixel.UserID = userid
+	if timestamp > p.Pixel.Timestamp {
+		p.Pixel.Color = color
+		p.Pixel.Timestamp = timestamp
+		p.Pixel.UserID = userid
 	}
 }
 
 func (img *image) SetPixel(message Message) int {
-	if message.X >= img.width || message.Y >= img.height || message.X < 0 || message.Y < 0 {
+	if message.X >= img.Width || message.Y >= img.Height || message.X < 0 || message.Y < 0 {
 		fmt.Printf("User %d tried accessing out of bounds \n", message.UserID)
 		return 1
 	}
@@ -57,24 +57,24 @@ func (img *image) SetPixel(message Message) int {
 		fmt.Printf("User %d tried setting non existent color \n", message.UserID)
 		return 1
 	}
-	pos := uint32(message.X)*uint32(img.width) + uint32(message.Y)
-	img.pixels[pos].setColor(message.Color, message.Timestamp, message.UserID)
+	pos := uint32(message.X)*uint32(img.Width) + uint32(message.Y)
+	img.Pixels[pos].setColor(message.Color, message.Timestamp, message.UserID)
 	return 0
 }
 
 func comparePixels(pixel1 *pixelContainer, pixel2 *pixelContainer) bool {
-	return pixel1.pixel.Color == pixel2.pixel.Color &&
-		pixel1.pixel.Timestamp == pixel2.pixel.Timestamp &&
-		pixel1.pixel.UserID == pixel2.pixel.UserID
+	return pixel1.Pixel.Color == pixel2.Pixel.Color &&
+		pixel1.Pixel.Timestamp == pixel2.Pixel.Timestamp &&
+		pixel1.Pixel.UserID == pixel2.Pixel.UserID
 }
 
 func (img *image) GetDiff(img2 *image) image {
-	diff := GetImage(img.width, img.height)
-	for i := 0; i < int(img.width*img.height); i++ {
-		if !comparePixels(&img.pixels[i], &img2.pixels[i]) {
-			diff.pixels[i].pixel.Color = img2.pixels[i].pixel.Color
-			diff.pixels[i].pixel.UserID = img2.pixels[i].pixel.UserID
-			diff.pixels[i].pixel.Timestamp = img2.pixels[i].pixel.Timestamp
+	diff := GetImage(img.Width, img.Height)
+	for i := 0; i < int(img.Width*img.Height); i++ {
+		if !comparePixels(&img.Pixels[i], &img2.Pixels[i]) {
+			diff.Pixels[i].Pixel.Color = img2.Pixels[i].Pixel.Color
+			diff.Pixels[i].Pixel.UserID = img2.Pixels[i].Pixel.UserID
+			diff.Pixels[i].Pixel.Timestamp = img2.Pixels[i].Pixel.Timestamp
 		}
 	}
 	return diff

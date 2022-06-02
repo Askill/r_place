@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -44,17 +47,17 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 	defer c.Close()
 	ticker := time.NewTicker(1 * time.Second)
-	var tmpImage = GetImage(img.width, img.height)
+	var tmpImage = GetImage(img.Width, img.Height)
 
 	for range ticker.C {
 
 		diff := tmpImage.GetDiff(&img)
-		for i := 0; i < int(diff.width*diff.height); i++ {
-			pix := diff.pixels[i]
-			if pix.pixel.UserID != 0 {
-				x := i / int(diff.width)
-				y := i % int(diff.height)
-				msg := Message{X: uint32(x), Y: uint32(y), Timestamp: pix.pixel.Timestamp, UserID: pix.pixel.UserID, Color: pix.pixel.Color}
+		for i := 0; i < int(diff.Width*diff.Height); i++ {
+			pix := diff.Pixels[i]
+			if pix.Pixel.UserID != 0 {
+				x := i / int(diff.Width)
+				y := i % int(diff.Height)
+				msg := Message{X: uint32(x), Y: uint32(y), Timestamp: pix.Pixel.Timestamp, UserID: pix.Pixel.UserID, Color: pix.Pixel.Color}
 				marshalMsg, err := json.Marshal(msg)
 				if err != nil {
 					log.Println("error while writing image", err)
@@ -68,7 +71,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 		if err := c.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 			return
 		}
-		copy(tmpImage.pixels, img.pixels)
+		copy(tmpImage.Pixels, img.Pixels)
 	}
 }
 
@@ -79,7 +82,6 @@ func set(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.SetReadLimit(maxMessageSize)
-
 	c.SetPongHandler(func(string) error { c.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	defer c.Close()
@@ -100,12 +102,49 @@ func set(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func loadState(img *image, path string) {
+	stateJSON, err := os.Open(path)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer stateJSON.Close()
+	byteValue, _ := ioutil.ReadAll(stateJSON)
+
+	json.Unmarshal(byteValue, &img)
+}
+
+func saveState(img *image, path string) {
+	ticker := time.NewTicker(1 * time.Second)
+
+	for range ticker.C {
+		imgJSON, _ := json.Marshal(img)
+		file, err := os.Create(path)
+
+		if err != nil {
+			return
+		}
+		defer file.Close()
+		file.WriteString(string(imgJSON))
+		if err != nil {
+			fmt.Println("Could not save state")
+			fmt.Println(err)
+		}
+	}
+}
+
 func main() {
 	var addr = flag.String("addr", "localhost:8080", "http service address")
 
 	flag.Parse()
 	log.SetFlags(0)
 	log.Println("starting server on", *addr)
+
+	cachePath := "./state.json"
+
+	loadState(&img, cachePath)
+	go saveState(&img, cachePath)
+
 	http.HandleFunc("/get", get)
 	http.HandleFunc("/set", set)
 

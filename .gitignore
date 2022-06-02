@@ -131,3 +131,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+go/state.json
+python/logo.png
