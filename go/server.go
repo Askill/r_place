@@ -114,8 +114,8 @@ func loadState(img *image, path string) {
 	json.Unmarshal(byteValue, &img)
 }
 
-func saveState(img *image, path string) {
-	ticker := time.NewTicker(1 * time.Second)
+func saveState(img *image, path string, period time.Duration) {
+	ticker := time.NewTicker(period * time.Second)
 
 	for range ticker.C {
 		imgJSON, _ := json.Marshal(img)
@@ -143,7 +143,7 @@ func main() {
 	cachePath := "./state.json"
 
 	loadState(&img, cachePath)
-	go saveState(&img, cachePath)
+	go saveState(&img, cachePath, 10)
 
 	http.HandleFunc("/get", get)
 	http.HandleFunc("/set", set)
