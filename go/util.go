@@ -14,14 +14,14 @@ type Message struct {
 }
 
 type pixel struct {
-	Color     uint8  `json:"color"`
-	Timestamp int64  `json:"timestamp"`
-	UserID    uint64 `json:"userid"`
+	Color     uint8  `json:"c"`
+	Timestamp int64  `json:"ts"`
+	UserID    uint64 `json:"uid"`
 }
 
 type pixelContainer struct {
-	Pixel pixel `json:"pixel"`
-	Mutex sync.Mutex
+	Pixel pixel `json:"p"`
+	mutex sync.Mutex
 }
 
 type image struct {
@@ -33,14 +33,14 @@ type image struct {
 func GetImage(w uint32, h uint32) image {
 	Pixels := make([]pixelContainer, w*h)
 	for i := 0; i < int(w*h); i++ {
-		Pixels[i] = pixelContainer{Pixel: pixel{Color: 0, Timestamp: 0, UserID: 0}, Mutex: sync.Mutex{}}
+		Pixels[i] = pixelContainer{Pixel: pixel{Color: 0, Timestamp: 0, UserID: 0}, mutex: sync.Mutex{}}
 	}
 	return image{Width: w, Height: h, Pixels: Pixels}
 }
 
 func (p *pixelContainer) setColor(color uint8, timestamp int64, userid uint64) {
-	p.Mutex.Lock()
-	defer p.Mutex.Unlock()
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	if timestamp > p.Pixel.Timestamp {
 		p.Pixel.Color = color
 		p.Pixel.Timestamp = timestamp

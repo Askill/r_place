@@ -48,10 +48,8 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 	defer c.Close()
 	ticker := time.NewTicker(1 * time.Second)
-	initial := GetImage(img.Width, img.Height)
-	diff := initial.GetDiff(&img)
 	for range ticker.C {
-
+		diff := tmpImage.GetDiff(&img)
 		for i := 0; i < int(diff.Width*diff.Height); i++ {
 			pix := diff.Pixels[i]
 			if pix.Pixel.UserID != 0 {
@@ -71,9 +69,14 @@ func get(w http.ResponseWriter, r *http.Request) {
 		if err := c.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 			return
 		}
-		diff = tmpImage.GetDiff(&img)
+
 		copy(tmpImage.Pixels, img.Pixels)
 	}
+}
+
+func getAll(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(img)
 }
 
 func set(w http.ResponseWriter, r *http.Request) {
@@ -147,6 +150,7 @@ func main() {
 	go saveState(&img, cachePath, 10)
 
 	http.HandleFunc("/get", get)
+	http.HandleFunc("/getAll", getAll)
 	http.HandleFunc("/set", set)
 
 	log.Fatal(http.ListenAndServe(*addr, nil))
