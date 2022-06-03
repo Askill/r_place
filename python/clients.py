@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import datetime
 
 import json
+from multiprocessing import Pool
 import random
 import time
 import matplotlib
@@ -41,7 +42,7 @@ async def sender(img):
             if succ == "1":
                 print(message, "was not set")
             
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.05)
 
 async def client():
     image = np.zeros(shape=[1000, 1000, 3], dtype=np.uint8)
@@ -63,11 +64,14 @@ async def client():
             #print(i, x)
 
 async def main():
-    img=mpimg.imread('logo.png')
-    coros = [sender(img) for _ in range(10)]
+    img=mpimg.imread('./logo.png')
+    coros = [sender(img) for _ in range(100)]
     coros.append(client())
     returns = await asyncio.gather(*coros)
     
+def main2(x):
+    asyncio.get_event_loop().run_until_complete(main())
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(main())
+    with Pool(12) as p:
+        print(p.map(main2, [() for _ in range(12)]))

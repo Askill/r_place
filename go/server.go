@@ -34,6 +34,7 @@ const (
 )
 
 var img = GetImage(1000, 1000)
+var tmpImage = GetImage(img.Width, img.Height)
 
 func get(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
@@ -47,11 +48,10 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 	defer c.Close()
 	ticker := time.NewTicker(1 * time.Second)
-	var tmpImage = GetImage(img.Width, img.Height)
-
+	initial := GetImage(img.Width, img.Height)
+	diff := initial.GetDiff(&img)
 	for range ticker.C {
 
-		diff := tmpImage.GetDiff(&img)
 		for i := 0; i < int(diff.Width*diff.Height); i++ {
 			pix := diff.Pixels[i]
 			if pix.Pixel.UserID != 0 {
@@ -71,6 +71,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 		if err := c.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 			return
 		}
+		diff = tmpImage.GetDiff(&img)
 		copy(tmpImage.Pixels, img.Pixels)
 	}
 }
