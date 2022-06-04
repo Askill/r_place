@@ -69,9 +69,10 @@ async def main():
     coros.append(client())
     returns = await asyncio.gather(*coros)
     
-def main2(x):
+def asyncMain(x):
     asyncio.get_event_loop().run_until_complete(main())
 
 if __name__ == "__main__":
-    with Pool(12) as p:
-        print(p.map(main2, [() for _ in range(12)]))
+    #with Pool(12) as p:
+    #    print(p.map(asyncMain, [() for _ in range(12)]))
+    asyncMain(0)
