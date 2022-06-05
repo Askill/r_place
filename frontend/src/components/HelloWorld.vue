@@ -3,21 +3,7 @@
 </template>
 
 <script>  
-var wsConnection = new WebSocket('ws://localhost:8080/get');
-wsConnection.onopen = (e) => {
-    console.log(`wsConnection open to 127.0.0.1:8080`, e);
-};
-wsConnection.onerror = (e) => {
-    console.error(`wsConnection error `, e);
-};
-wsConnection.onmessage = (e) => {
-    //var canvas = document.getElementById("main_canvas");
-    //var ctx = canvas.getContext("2d");
-    let data = JSON.parse(e.data)
-    console.log(data);
-    //ctx.fillStyle = "rgba("+data["color"][0]+","+data["color"][1]+","+data["color"][2]+","+(255)+")";
-    //ctx.fillRect(data["x"], data["y"], 1, 1);
-};
+
 
 
 </script>

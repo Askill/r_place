@@ -33,7 +33,7 @@ async def sender(img):
             message = pixel(
                 x=rx,
                 y=ry,
-                color=int(img[rx][ry][0]*255),
+                color=int(sum(img[rx][ry])/3),
                 timestamp=int(time.time()),
                 userid=1,
             )
@@ -42,7 +42,7 @@ async def sender(img):
             if succ == "1":
                 print(message, "was not set")
             
-            await asyncio.sleep(0.05)
+            
 
 async def client():
     image = np.zeros(shape=[1000, 1000, 3], dtype=np.uint8)
@@ -57,14 +57,14 @@ async def client():
             x = pixel(**json.loads(await websocket.recv()))
             #image[x.x][x.y] = ([y*255 for y in colors[x.color]])
             image[x.x][x.y] = ((x.color, x.color, x.color))
-            if i% 5000 == 0:
-                cv2.imshow("changes x", image)
-                cv2.waitKey(10) & 0XFF
+            #if i% 5000 == 0:
+            #    cv2.imshow("changes x", image)
+            #    cv2.waitKey(10) & 0XFF
             await websocket.send("1")
             #print(i, x)
 
 async def main():
-    img=mpimg.imread('./logo.png')
+    img=mpimg.imread('./1.jpg')
     coros = [sender(img) for _ in range(100)]
     coros.append(client())
     returns = await asyncio.gather(*coros)
@@ -73,6 +73,6 @@ def asyncMain(x):
     asyncio.get_event_loop().run_until_complete(main())
 
 if __name__ == "__main__":
-    #with Pool(12) as p:
-    #    print(p.map(asyncMain, [() for _ in range(12)]))
-    asyncMain(0)
+    with Pool(12) as p:
+        print(p.map(asyncMain, [() for _ in range(12)]))
+    #asyncMain(0)

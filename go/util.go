@@ -53,8 +53,8 @@ func (img *image) SetPixel(message Message) int {
 		fmt.Printf("User %d tried accessing out of bounds \n", message.UserID)
 		return 1
 	}
-	if message.Color >= 255 || message.Color < 0 {
-		fmt.Printf("User %d tried setting non existent color \n", message.UserID)
+	if message.Color > 255 || message.Color < 0 {
+		fmt.Printf("User %d tried setting non existent color %d \n", message.UserID, message.Color)
 		return 1
 	}
 	pos := uint32(message.X)*uint32(img.Width) + uint32(message.Y)
