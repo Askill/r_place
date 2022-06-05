@@ -62,12 +62,14 @@ func get(w http.ResponseWriter, r *http.Request) {
 				msg := Message{X: uint32(x), Y: uint32(y), Timestamp: pix.Pixel.Timestamp, UserID: pix.Pixel.UserID, Color: pix.Pixel.Color}
 				marshalMsg, err := json.Marshal(msg)
 				if err != nil {
-					log.Println("error while writing image", err)
+					log.Println("error while marshalling image", err)
 					break
 				}
 				err = c.WriteMessage(1, marshalMsg)
-				_, msg2, _ := c.ReadMessage()
-				_ = msg2
+				if err != nil {
+					log.Println("error while writing image", err)
+					break
+				}
 			}
 		}
 		if err := c.WriteMessage(websocket.PingMessage, []byte{}); err != nil {

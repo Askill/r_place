@@ -57,7 +57,7 @@ async def client():
             x = pixel(**json.loads(await websocket.recv()))
             #image[x.x][x.y] = ([y*255 for y in colors[x.color]])
             image[x.x][x.y] = ((x.color, x.color, x.color))
-            if i% 500000 == 0:
+            if i% 5000 == 0:
                 cv2.imshow("changes x", image)
                 cv2.waitKey(10) & 0XFF
             await websocket.send("1")
