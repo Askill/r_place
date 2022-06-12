@@ -59,7 +59,8 @@ def closest_match(rgb, color_map):
     return min(range(len(rgb_colors)), key=lambda i: eucleadian_distance(rgb, color_map[i]))
 
 async def sender(img):
-    async with websockets.connect("ws://localhost:8080/set") as websocket:
+    async with websockets.connect("ws://localhost:8080/set", timeout=600) as websocket:
+    
         while True:
             rx = random.randint(0, 999)
             ry = random.randint(0, 999)
@@ -72,7 +73,7 @@ async def sender(img):
             )
             await websocket.send(json.dumps(message.__dict__))
             succ = await websocket.recv()
-            if succ == "1":
+            if succ != "0":
                 print(message, "was not set")
             
             
@@ -85,24 +86,19 @@ async def client():
             i+=1
             x = pixel(**json.loads(await websocket.recv()))
             image[x.x][x.y] = rgb_colors[x.color]
-            #if i% 5000 == 0:
-            #    cv2.imshow("changes x", image)
-            #    cv2.waitKey(10) & 0XFF
             await websocket.send("1")
-            #print(i, x)
 
 async def main():
-    img= Image.open('./2.jpg')
+    img= Image.open('./python/images/2.jpg')
     img= img.resize((1000, 1000), Image.ANTIALIAS)
     img = np.array(img)
     coros = [sender(img) for _ in range(100)]
-    coros.append(client())
-    returns = await asyncio.gather(*coros)
+    _ = await asyncio.gather(*coros)
     
 def asyncMain(x):
     asyncio.get_event_loop().run_until_complete(main())
 
 if __name__ == "__main__":
-    with Pool(12) as p:
-        print(p.map(asyncMain, [() for _ in range(12)]))
-    #asyncMain(0)
+    #with Pool(12) as p:
+    #    print(p.map(asyncMain, [() for _ in range(12)]))
+    asyncMain(0)

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -79,10 +80,24 @@ func get(w http.ResponseWriter, r *http.Request) {
 		copy(tmpImage.Pixels, img.Pixels)
 	}
 }
-
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
 func getAll(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(img)
+}
+
+func sendPing(ticker *time.Ticker, c *websocket.Conn, mutex *sync.Mutex) {
+	for range ticker.C {
+		mutex.Lock()
+		defer mutex.Unlock()
+		if err := c.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			fmt.Println("Error while sending ping")
+			return
+		}
+	}
 }
 
 func set(w http.ResponseWriter, r *http.Request) {
@@ -94,8 +109,14 @@ func set(w http.ResponseWriter, r *http.Request) {
 	c.SetReadLimit(maxMessageSize)
 	c.SetPongHandler(func(string) error { c.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
+	ticker := time.NewTicker(pingPeriod / 2)
 	defer c.Close()
+	defer ticker.Stop()
+	mutex := sync.Mutex{}
+	go sendPing(ticker, c, &mutex)
+
 	for {
+
 		mt, msg, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
@@ -108,7 +129,10 @@ func set(w http.ResponseWriter, r *http.Request) {
 		json.Unmarshal(msg, &message)
 
 		status := img.SetPixel(message)
+		mutex.Lock()
+
 		err = c.WriteMessage(1, []byte(strconv.Itoa(status)))
+		mutex.Unlock()
 	}
 }
 

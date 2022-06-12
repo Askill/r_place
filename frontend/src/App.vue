@@ -33,7 +33,23 @@ export default {
         "#CF6EE4",
         "#820080"
         ]
+    async function load() {
+        let url = 'http://localhost:8080/getAll';
+        let obj = null;
+        
+        try {
+            obj = await (await fetch(url)).json();
+        } catch(e) {
+            console.log('error');
+        }
+        return obj
+    }
 
+   
+    for(const pixel in load() ){
+      ctx.fillStyle = colorpalettte[parseInt(pixel["color"])];
+        ctx.fillRect(pixel["y"], pixel["x"], 1, 1);
+    }
     wsConnection.onopen = (e) => {
         console.log(`wsConnection open`, e);
     };

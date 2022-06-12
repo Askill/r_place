@@ -133,3 +133,6 @@ dmypy.json
 .pyre/
 go/state.json
 python/logo.png
+python/images/2.jpg
+python/images/1.jpg
+.vscode/launch.json
