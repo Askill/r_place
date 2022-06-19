@@ -59,7 +59,7 @@ def closest_match(rgb, color_map):
     return min(range(len(rgb_colors)), key=lambda i: eucleadian_distance(rgb, color_map[i]))
 
 async def sender(img):
-    async with websockets.connect("ws://localhost:8080/set", timeout=600) as websocket:
+    async with websockets.connect("ws://localhost:8080/set", timeout=60) as websocket:
     
         while True:
             rx = random.randint(0, 999)
@@ -89,7 +89,7 @@ async def client():
             await websocket.send("1")
 
 async def main():
-    img= Image.open('./python/images/2.jpg')
+    img= Image.open('./python/images/3.jpg')
     img= img.resize((1000, 1000), Image.ANTIALIAS)
     img = np.array(img)
     coros = [sender(img) for _ in range(100)]

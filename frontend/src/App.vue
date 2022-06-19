@@ -33,33 +33,19 @@ export default {
         "#CF6EE4",
         "#820080"
         ]
-    async function load() {
-        let url = 'http://localhost:8080/getAll';
-        let obj = null;
-        
-        try {
-            obj = await (await fetch(url)).json();
-        } catch(e) {
-            console.log('error');
-        }
-        return obj
-    }
+    var background = new Image();
+    background.src = "http://localhost:8080/getAll";
 
-   
-    for(const pixel in load() ){
-      ctx.fillStyle = colorpalettte[parseInt(pixel["color"])];
-        ctx.fillRect(pixel["y"], pixel["x"], 1, 1);
-    }
+
     wsConnection.onopen = (e) => {
+        ctx.drawImage(background,0,0);   
         console.log(`wsConnection open`, e);
     };
     wsConnection.onerror = (e) => {
         console.error(`wsConnection error `, e);
     };
     wsConnection.onmessage = (e) => {
-
         let data = JSON.parse(e.data)
-
         ctx.fillStyle = colorpalettte[parseInt(data["color"])];
         ctx.fillRect(data["y"], data["x"], 1, 1);
     };

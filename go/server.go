@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	go_image "image"
+	"image/color"
+	"image/png"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,6 +43,15 @@ const (
 
 var img = GetImage(1000, 1000)
 var tmpImage = GetImage(img.Width, img.Height)
+var diff = GetImage(img.Width, img.Height)
+
+func calcDiff() {
+	ticker := time.NewTicker(1 * time.Second)
+	for range ticker.C {
+		diff = tmpImage.GetDiff(&img)
+		copy(tmpImage.Pixels, img.Pixels)
+	}
+}
 
 func get(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
@@ -54,9 +66,11 @@ func get(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 	ticker := time.NewTicker(1 * time.Second)
 	for range ticker.C {
-		diff := tmpImage.GetDiff(&img)
+
 		for i := 0; i < int(diff.Width*diff.Height); i++ {
+
 			pix := diff.Pixels[i]
+
 			if pix.Pixel.UserID != 0 {
 				x := i / int(diff.Width)
 				y := i % int(diff.Height)
@@ -85,8 +99,19 @@ func enableCors(w *http.ResponseWriter) {
 }
 func getAll(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(img)
+	w.Header().Set("Content-Type", "image/png")
+	colors := [16]color.Color{color.RGBA{255, 255, 255, 0xff}, color.RGBA{228, 228, 228, 0xff}, color.RGBA{136, 136, 136, 0xff}, color.RGBA{34, 34, 34, 0xff}, color.RGBA{255, 167, 209, 0xff}, color.RGBA{229, 0, 0, 0xff}, color.RGBA{229, 149, 0, 0xff}, color.RGBA{160, 106, 66, 0xff}, color.RGBA{229, 217, 0, 0xff}, color.RGBA{148, 224, 68, 0xff}, color.RGBA{2, 190, 1, 0xff}, color.RGBA{0, 211, 221, 0xff}, color.RGBA{0, 131, 199, 0xff}, color.RGBA{0, 0, 234, 0xff}, color.RGBA{207, 110, 228, 0xff}, color.RGBA{130, 0, 128, 0xff}}
+	upLeft := go_image.Point{0, 0}
+	lowRight := go_image.Point{int(img.Width), int(img.Height)}
+
+	png_img := go_image.NewRGBA(go_image.Rectangle{upLeft, lowRight})
+
+	for x := uint32(0); x < img.Width; x++ {
+		for y := uint32(0); y < img.Height; y++ {
+			png_img.Set(int(y), int(x), colors[img.Pixels[x*img.Width+y].Pixel.Color])
+		}
+	}
+	png.Encode(w, png_img)
 }
 
 func sendPing(ticker *time.Ticker, c *websocket.Conn, mutex *sync.Mutex) {
@@ -178,7 +203,7 @@ func main() {
 
 	loadState(&img, cachePath)
 	go saveState(&img, cachePath, 10)
-
+	go calcDiff()
 	http.HandleFunc("/get", get)
 	http.HandleFunc("/getAll", getAll)
 	http.HandleFunc("/set", set)

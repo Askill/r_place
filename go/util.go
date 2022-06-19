@@ -28,6 +28,7 @@ type image struct {
 	Width  uint32           `json:"Width"`
 	Height uint32           `json:"Height"`
 	Pixels []pixelContainer `json:"Pixels"`
+	Mutex  sync.Mutex
 }
 
 func GetImage(w uint32, h uint32) image {
@@ -35,7 +36,7 @@ func GetImage(w uint32, h uint32) image {
 	for i := 0; i < int(w*h); i++ {
 		Pixels[i] = pixelContainer{Pixel: pixel{Color: 0, Timestamp: 0, UserID: 0}, mutex: sync.Mutex{}}
 	}
-	return image{Width: w, Height: h, Pixels: Pixels}
+	return image{Width: w, Height: h, Pixels: Pixels, Mutex: sync.Mutex{}}
 }
 
 func (p *pixelContainer) setColor(color uint8, timestamp int64, userid uint64) {
