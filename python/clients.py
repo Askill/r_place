@@ -59,23 +59,25 @@ def closest_match(rgb, color_map):
     return min(range(len(rgb_colors)), key=lambda i: eucleadian_distance(rgb, color_map[i]))
 
 async def sender(img):
-    async with websockets.connect("ws://localhost:8080/set", timeout=60) as websocket:
-    
-        while True:
-            rx = random.randint(0, 999)
-            ry = random.randint(0, 999)
-            message = pixel(
-                x=rx,
-                y=ry,
-                color= closest_match(img[rx][ry], rgb_colors),
-                timestamp=int(time.time()),
-                userid=1,
-            )
-            await websocket.send(json.dumps(message.__dict__))
-            succ = await websocket.recv()
-            if succ != "0":
-                print(message, "was not set")
-            
+    while True: 
+        try:
+            async with websockets.connect("ws://localhost:8080/set", timeout=60) as websocket:
+                while True:
+                    rx = random.randint(0, 999)
+                    ry = random.randint(0, 999)
+                    message = pixel(
+                        x=rx,
+                        y=ry,
+                        color= closest_match(img[rx][ry], rgb_colors),
+                        timestamp=int(time.time()),
+                        userid=1,
+                    )
+                    await websocket.send(json.dumps(message.__dict__))
+                    succ = await websocket.recv()
+                    if succ != "0":
+                        print(message, "was not set")
+        except:
+            print("reconnecting")
             
 
 async def client():
