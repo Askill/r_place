@@ -59,12 +59,12 @@ func get(w http.ResponseWriter, r *http.Request) {
 		log.Print("error while upgrading", err)
 		return
 	}
-
+	fmt.Println("incoming connection")
 	c.SetReadLimit(maxMessageSize)
 	c.SetPongHandler(func(string) error { c.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	defer c.Close()
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(200 * time.Millisecond)
 	for range ticker.C {
 
 		for i := 0; i < int(diff.Width*diff.Height); i++ {

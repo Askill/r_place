@@ -1,55 +1,18 @@
 <template>
-  <HelloWorld msg="Yes"/>
+  <PlaceCanvas/>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import PlaceCanvas from './components/PlaceCanvas.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    PlaceCanvas
   },
   mounted(){
-    var wsConnection = new WebSocket('ws://localhost:8080/get');
-    var canvas = document.getElementById("main_canvas");
-    var ctx = canvas.getContext("2d");
-
-    var colorpalettte = [
-        "#FFFFFF",
-        "#E4E4E4",
-        "#888888",
-        "#222222",
-        "#FFA7D1",
-        "#E50000",
-        "#E59500",
-        "#A06A42",
-        "#E5D900",
-        "#94E044",
-        "#02BE01",
-        "#00D3DD",
-        "#0083C7",
-        "#0000EA",
-        "#CF6EE4",
-        "#820080"
-        ]
-    var background = new Image();
-    background.src = "http://localhost:8080/getAll";
-
-
-    wsConnection.onopen = (e) => {
-        ctx.drawImage(background,0,0);   
-        console.log(`wsConnection open`, e);
-    };
-    wsConnection.onerror = (e) => {
-        console.error(`wsConnection error `, e);
-    };
-    wsConnection.onmessage = (e) => {
-        let data = JSON.parse(e.data)
-        ctx.fillStyle = colorpalettte[parseInt(data["color"])];
-        ctx.fillRect(data["y"], data["x"], 1, 1);
-    };
-  }
+  this.$components.PlaceCanvas.setup()
+}
 }
 </script>
 
