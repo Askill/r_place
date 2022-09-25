@@ -89,6 +89,7 @@ async def sender(target, img):
             return 
         except websockets.ConnectionClosed:
             print("reconnecting")
+            continue
 
 
 async def client(target):
@@ -129,4 +130,5 @@ def asyncMain(x, target):
 if __name__ == "__main__":
     # with Pool(12) as p:
     #    print(p.map(asyncMain, [() for _ in range(12)]))
-    asyncMain(0, target="ws://venus:8080")
+    asyncMain(0, target="ws://" + os.getenv("TARGET", "venus:8080"))
+
