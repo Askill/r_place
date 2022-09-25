@@ -130,9 +130,5 @@ def asyncMain(x, target):
 if __name__ == "__main__":
     # with Pool(12) as p:
     #    print(p.map(asyncMain, [() for _ in range(12)]))
-<<<<<<< HEAD
-    asyncMain(0, target=os.getenv("TARGET", "ws://venus:8080"))
-=======
     asyncMain(0, target="ws://" + os.getenv("TARGET", "venus:8080"))
 
->>>>>>> b385990c8446e128a68d99d65b2af4a7eb5b3bad
