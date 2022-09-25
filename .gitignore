@@ -1,7 +1,6 @@
-**/*.mod
-**/*.sum
-**/*.exe
 
+**/*.exe
+**/state.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

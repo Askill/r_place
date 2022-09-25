@@ -193,7 +193,7 @@ func saveState(img *image, path string, period time.Duration) {
 }
 
 func main() {
-	var addr = flag.String("addr", "localhost:8080", "http service address")
+	var addr = flag.String("addr", "0.0.0.0:8080", "http service address")
 
 	flag.Parse()
 	log.SetFlags(0)
