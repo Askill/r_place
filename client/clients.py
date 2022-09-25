@@ -69,7 +69,7 @@ async def sender(target, img):
     i = 0
     async for websocket in websockets.connect(target + "/set", timeout=10):
         try:
-            while i < max_h*max_w*1.5:
+            while i < max_h*max_w*1.8:
                 i+=1
                 rx = random.randint(0, max_w - 1)
                 ry = random.randint(0, max_h - 1)
