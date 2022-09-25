@@ -66,10 +66,11 @@ async def sender(target, img):
     start_x = random.randint(0, 900)
     start_y = random.randint(0, 900)
     max_w, max_h, _ = img.shape
-    
-    async for websocket in websockets.connect(target + "/set"):
+    i = 0
+    async for websocket in websockets.connect(target + "/set", timeout=10):
         try:
-            for _ in range(int(max_h*max_w*1.3)):
+            while i < max_h*max_w*1.5:
+                i+=1
                 rx = random.randint(0, max_w - 1)
                 ry = random.randint(0, max_h - 1)
                 if rx + start_x >= 1000 or ry + start_y >= 1000:
@@ -85,7 +86,7 @@ async def sender(target, img):
                 succ = await websocket.recv()
                 if succ != "0":
                     print(message, "was not set")
-            return
+            return 
         except websockets.ConnectionClosed:
             print("reconnecting")
 
@@ -111,6 +112,7 @@ def rescale(max_dimension, img):
 async def main(target):
     images_folder_path = "./images"
     while True:
+        print("start cycle")
         image_paths = os.listdir(images_folder_path)
         images = [
             np.array(rescale(random.randint(100, 400), Image.open(f"{images_folder_path}/{image_path}")))
@@ -127,4 +129,4 @@ def asyncMain(x, target):
 if __name__ == "__main__":
     # with Pool(12) as p:
     #    print(p.map(asyncMain, [() for _ in range(12)]))
-    asyncMain(0, target="ws://localhost:8080")
+    asyncMain(0, target=os.getenv("TARGET", "ws://venus:8080"))
